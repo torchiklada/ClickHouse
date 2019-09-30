@@ -8,7 +8,7 @@ namespace DB
 
 struct PartLogElement
 {
-    enum Type
+    enum Type : Int8 // signed for compatibility with DataTypeEnum8
     {
         NEW_PART = 1,
         MERGE_PARTS = 2,
@@ -20,7 +20,7 @@ struct PartLogElement
 
     Type event_type = NEW_PART;
 
-    time_t event_time = 0;
+    UInt32 event_time = 0;
     UInt64 duration_ms = 0;
 
     String database_name;

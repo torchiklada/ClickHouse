@@ -337,7 +337,7 @@ Field DataTypeEnum<Type>::castToValue(const Field & value_or_name) const
     else if (value_or_name.getType() == Field::Types::Int64
           || value_or_name.getType() == Field::Types::UInt64)
     {
-        Int64 value = value_or_name.get<Int64>();
+        auto value = castField<Int64>(value_or_name);
         checkOverflow<Type>(value);
         getNameForValue(static_cast<Type>(value)); /// Check correctness
         return value;
@@ -390,12 +390,8 @@ static DataTypePtr createExact(const ASTPtr & arguments)
             throw Exception("Elements of Enum data type must be of form: 'name' = number, where name is string literal and number is an integer",
                 ErrorCodes::UNEXPECTED_AST_STRUCTURE);
 
-        const String & field_name = name_literal->value.get<String>();
-        const auto value = value_literal->value.get<NearestFieldType<FieldType>>();
-
-        if (value > std::numeric_limits<FieldType>::max() || value < std::numeric_limits<FieldType>::min())
-            throw Exception{"Value " + toString(value) + " for element '" + field_name + "' exceeds range of " + EnumName<FieldType>::value,
-                ErrorCodes::ARGUMENT_OUT_OF_BOUND};
+        const String & field_name = name_literal->value.safeGet<String>();
+        const auto value = castField<FieldType>(value_literal->value);
 
         values.emplace_back(field_name, value);
     }
