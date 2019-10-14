@@ -117,9 +117,10 @@ Best: 1 - 593010342                 Best: 1 - 503062152                 Best: 1 
 using Value = uint64_t;
 
 template <typename Map>
-void NO_INLINE bench(const std::vector<StringRef> & data, DB::Arena & pool, const char * name)
+void NO_INLINE bench(const std::vector<StringRef> & data, DB::Arena &, const char * name)
 {
     // warm up
+    /*
     {
         Map map;
         typename Map::LookupResult it;
@@ -134,8 +135,10 @@ void NO_INLINE bench(const std::vector<StringRef> & data, DB::Arena & pool, cons
             ++it->getSecond();
         }
     }
-    double best_time = 10000;
-    for (auto t = 0ul; t < 5; ++t)
+    */
+
+    std::cerr << "method " << name << std::endl;
+    for (auto t = 0ul; t < 7; ++t)
     {
         Stopwatch watch;
         Map map;
@@ -144,18 +147,15 @@ void NO_INLINE bench(const std::vector<StringRef> & data, DB::Arena & pool, cons
 
         for (size_t i = 0, size = data.size(); i < size; ++i)
         {
-            auto key_holder = DB::ArenaKeyHolder{data[i], pool};
-            map.emplace(key_holder, it, inserted);
+            map.emplace(data[i], it, inserted);
             if (inserted)
                 it->getSecond() = 0;
             ++it->getSecond();
         }
         watch.stop();
-        best_time = std::min(watch.elapsedSeconds(), best_time);
-    }
 
-    std::cerr << std::fixed << std::setprecision(2) << "HashMap (" << name << "). Elapsed: " << best_time << " (" << data.size() / best_time
-              << " elem/sec.)" << std::endl;
+        std::cerr << "single-run " << watch.elapsedSeconds() << std::endl;
+    }
 }
 
 
@@ -170,7 +170,7 @@ int main(int argc, char ** argv)
     size_t n = atoi(argv[1]);
     size_t m = atoi(argv[2]);
 
-    DB::Arena pool;
+    DB::Arena pool(128 * 1024 * 1024);
     std::vector<StringRef> data(n);
 
     std::cerr << "sizeof(Key) = " << sizeof(StringRef) << ", sizeof(Value) = " << sizeof(Value) << std::endl;
