@@ -21,50 +21,33 @@ FillingBlockInputStream::FillingBlockInputStream(
     for (const auto & elem : sort_description)
         is_fill_column[header.getPositionByName(elem.column_name)] = true;
 
-    auto try_convert_fields = [](FillColumnDescription & descr, const DataTypePtr & type)
-    {
-        auto max_type = Field::Types::Null;
-        WhichDataType which(type);
-        DataTypePtr to_type;
-        if (isInteger(type) || which.isDateOrDateTime())
-        {
-            max_type = Field::Types::Int64;
-            to_type = std::make_shared<DataTypeInt64>();
-        }
-        else if (which.isFloat())
-        {
-            max_type = Field::Types::Float64;
-            to_type = std::make_shared<DataTypeFloat64>();
-        }
-
-        if (descr.fill_from.getType() > max_type || descr.fill_to.getType() > max_type
-            || descr.fill_step.getType() > max_type)
-            return false;
-        descr.fill_from = convertFieldToType(descr.fill_from, *to_type);
-        descr.fill_to = convertFieldToType(descr.fill_to, *to_type);
-        descr.fill_step = convertFieldToType(descr.fill_step, *to_type);
-
-        return true;
-    };
-
     for (size_t i = 0; i < header.columns(); ++i)
     {
         if (is_fill_column[i])
         {
-            size_t pos = fill_column_positions.size();
+            const size_t pos = fill_column_positions.size();
             auto & descr = filling_row.getFillDescription(pos);
-            auto type = header.getByPosition(i).type;
-            if (!try_convert_fields(descr, type))
-                throw Exception("Incompatible types of WITH FILL expression values with column type "
-                    + type->getName(), ErrorCodes::INVALID_WITH_FILL_EXPRESSION);
+            auto & column_type = *header.getByPosition(i).type;
 
-            if (type->isValueRepresentedByUnsignedInteger() &&
-                ((!descr.fill_from.isNull() && less(descr.fill_from, Field{0}, 1)) ||
-                    (!descr.fill_to.isNull() && less(descr.fill_to, Field{0}, 1))))
+            DataTypePtr step_type;
+
+            if (isInteger(column_type) || isDateOrDateTime(column_type))
             {
-                throw Exception("WITH FILL bound values cannot be negative for unsigned type "
-                    + type->getName(), ErrorCodes::INVALID_WITH_FILL_EXPRESSION);
+                step_type = std::make_shared<DataTypeInt64>();
             }
+            else if (isFloat(column_type))
+            {
+                step_type = std::make_shared<DataTypeFloat64>();
+            }
+            else
+            {
+                throw Exception("Invalid column type '" + column_type.getName()
+                    + "' for WITH FILL expression.", ErrorCodes::INVALID_WITH_FILL_EXPRESSION);
+            }
+
+            descr.fill_from = convertFieldWithCheck(descr.fill_from, column_type);
+            descr.fill_to = convertFieldWithCheck(descr.fill_to, column_type);
+            descr.fill_step = convertFieldWithCheck(descr.fill_step, *step_type);
 
             fill_column_positions.push_back(i);
         }

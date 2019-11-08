@@ -24,6 +24,7 @@ namespace DB
 namespace ErrorCodes
 {
     extern const int NUMBER_OF_ARGUMENTS_DOESNT_MATCH;
+    extern const int BAD_ARGUMENTS;
 }
 
 static void parseAndInsertValues(MutableColumns & res_columns, const ASTs & args, const Block & sample_block, const Context & context)
@@ -63,7 +64,7 @@ StoragePtr TableFunctionValues::executeImpl(const ASTPtr & ast_function, const C
     ASTs & args_func = ast_function->children;
 
     if (args_func.size() != 1)
-        throw Exception("Table function '" + getName() + "' must have arguments.", ErrorCodes::LOGICAL_ERROR);
+        throw Exception("Table function '" + getName() + "' must have arguments.", ErrorCodes::BAD_ARGUMENTS);
 
     ASTs & args = args_func.at(0)->children;
 
@@ -72,6 +73,15 @@ StoragePtr TableFunctionValues::executeImpl(const ASTPtr & ast_function, const C
                         ErrorCodes::NUMBER_OF_ARGUMENTS_DOESNT_MATCH);
 
     /// Parsing first argument as table structure and creating a sample block
+    auto structure_field = args[0]->as<ASTLiteral &>().value;
+    if (structure_field.getType() != Field::Types::String)
+    {
+        throw Exception("The first parameter of table function '" + getName() +
+                        "' must be a table structure definition string. Got '" +
+                        applyVisitor(FieldVisitorToString(), structure_field) + "' instead.",
+                        ErrorCodes::BAD_ARGUMENTS);
+
+    }
     std::string structure = args[0]->as<ASTLiteral &>().value.safeGet<String>();
 
     ColumnsDescription columns = parseColumnsListFromString(structure, context);

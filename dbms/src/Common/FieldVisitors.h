@@ -400,8 +400,14 @@ private:
 public:
     explicit FieldVisitorSum(const Field & rhs_) : rhs(rhs_) {}
 
-    bool operator() (UInt64 & x) const { x += get<UInt64>(rhs); return x != 0; }
-    bool operator() (Int64 & x) const { x += get<Int64>(rhs); return x != 0; }
+    // We can add all ints as unsigned regardless of their actual signedness.
+    bool operator() (Int64 & x) const { return this->operator()(reinterpret_cast<UInt64 &>(x)); }
+    bool operator() (UInt64 & x) const
+    {
+        x += rhs.reinterpret<UInt64>();
+        return x != 0;
+    }
+
     bool operator() (Float64 & x) const { x += get<Float64>(rhs); return x != 0; }
 
     bool operator() (Null &) const { throw Exception("Cannot sum Nulls", ErrorCodes::LOGICAL_ERROR); }

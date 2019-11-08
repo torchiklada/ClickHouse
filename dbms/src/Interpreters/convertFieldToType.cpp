@@ -337,5 +337,16 @@ Field convertFieldToType(const Field & from_value, const IDataType & to_type, co
         return convertFieldToTypeImpl(from_value, to_type, from_type_hint);
 }
 
+Field convertFieldWithCheck(const Field & src, const IDataType & type, const IDataType * from_type_hint)
+{
+    Field res = convertFieldToType(src, type, from_type_hint);
+    if (!src.isNull() && res.isNull())
+    {
+        throw Exception("Cannot convert Field '" + applyVisitor(FieldVisitorToString(), src)
+            + "' of type '" + Field::Types::toString(src.getType())
+            + "' to type '" + type.getName() + "'", ErrorCodes::TYPE_MISMATCH);
+    }
+    return res;
+}
 
 }

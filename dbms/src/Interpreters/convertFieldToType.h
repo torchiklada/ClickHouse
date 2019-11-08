@@ -17,4 +17,9 @@ class IDataType;
   */
 Field convertFieldToType(const Field & from_value, const IDataType & to_type, const IDataType * from_type_hint = nullptr);
 
+/**
+  * As above, but if value is not in range -- throw instead of returning Null.
+  */
+Field convertFieldWithCheck(const Field & src, const IDataType & type, const IDataType * from_type_hint = nullptr);
+
 }

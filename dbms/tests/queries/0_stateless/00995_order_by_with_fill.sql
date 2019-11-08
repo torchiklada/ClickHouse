@@ -40,6 +40,6 @@ SELECT * FROM fill ORDER BY a WITH FILL, b WITH fill TO 6 STEP 2;
 SELECT * FROM fill ORDER BY a WITH FILL STEP -1; -- { serverError 475 }
 SELECT * FROM fill ORDER BY a WITH FILL FROM 10 TO 1; -- { serverError 475 }
 SELECT * FROM fill ORDER BY a DESC WITH FILL FROM 1 TO 10; -- { serverError 475 }
-SELECT * FROM fill ORDER BY a WITH FILL FROM -10 to 10; -- { serverError 475 }
+SELECT * FROM fill ORDER BY a WITH FILL FROM -10 to 10; -- { serverError 53 }
 
 DROP TABLE fill;
