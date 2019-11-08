@@ -1240,11 +1240,11 @@ struct ToNumberMonotonicity
 
         const bool left_in_first_half = left.isNull()
             ? from_is_unsigned
-            : (left.get<Int64>() >= 0);
+            : (left.reinterpret<Int64>() >= 0);
 
         const bool right_in_first_half = right.isNull()
             ? !from_is_unsigned
-            : (right.get<Int64>() >= 0);
+            : (right.reinterpret<Int64>() >= 0);
 
         /// Size of type is the same.
         if (size_of_from == size_of_to)
@@ -1284,7 +1284,7 @@ struct ToNumberMonotonicity
             if (from_is_unsigned == to_is_unsigned)
             {
                 /// all bits other than that fits, must be same.
-                if (divideByRangeOfType(left.get<UInt64>()) == divideByRangeOfType(right.get<UInt64>()))
+                if (divideByRangeOfType(left.reinterpret<UInt64>()) == divideByRangeOfType(right.reinterpret<UInt64>()))
                     return {true};
 
                 return {};
@@ -1294,8 +1294,8 @@ struct ToNumberMonotonicity
                 /// When signedness is changed, it's also required for arguments to be from the same half.
                 /// And they must be in the same half after converting to the result type.
                 if (left_in_first_half == right_in_first_half
-                    && (T(left.get<Int64>()) >= 0) == (T(right.get<Int64>()) >= 0)
-                    && divideByRangeOfType(left.get<UInt64>()) == divideByRangeOfType(right.get<UInt64>()))
+                    && (T(left.reinterpret<Int64>()) >= 0) == (T(right.reinterpret<Int64>()) >= 0)
+                    && divideByRangeOfType(left.reinterpret<UInt64>()) == divideByRangeOfType(right.reinterpret<UInt64>()))
                     return {true};
 
                 return {};
@@ -1330,7 +1330,7 @@ struct ToStringMonotonicity
         if (left.getType() == Field::Types::UInt64
             && right.getType() == Field::Types::UInt64)
         {
-            return (left.get<Int64>() == 0 && right.get<Int64>() == 0)
+            return (left.get<UInt64>() == 0 && right.get<UInt64>() == 0)
                 || (floor(log10(left.get<UInt64>())) == floor(log10(right.get<UInt64>())))
                 ? positive : not_monotonic;
         }

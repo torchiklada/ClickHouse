@@ -220,7 +220,11 @@ private:
                     if (isString(column.type))
                         moves.emplace_back(MoveType::ConstKey, column_const.getField().get<String>());
                     else
-                        moves.emplace_back(MoveType::ConstIndex, column_const.getField().get<Int64>());
+                    {
+                        // May have either Int64 or UInt64 depending on the literal type, assume no overflow
+                        // and reinterpret as Int64.
+                        moves.emplace_back(MoveType::ConstIndex, column_const.getField().reinterpret<Int64>());
+                    }
                 }
                 else
                 {

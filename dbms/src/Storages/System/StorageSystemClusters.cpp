@@ -59,7 +59,8 @@ void StorageSystemClusters::fillData(MutableColumns & res_columns, const Context
                 res_columns[i++]->insert(address.user);
                 res_columns[i++]->insert(address.default_database);
                 res_columns[i++]->insert(pool_status[replica_index].error_count);
-                res_columns[i++]->insert(pool_status[replica_index].estimated_recovery_time.count());
+                res_columns[i++]->insert(static_cast<UInt32>(
+                    pool_status[replica_index].estimated_recovery_time.count()));
             }
         }
     }

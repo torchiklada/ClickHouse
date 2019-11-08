@@ -793,7 +793,7 @@ private:
             table_num_to_num = std::make_unique<NumToNum>();
             auto & table = *table_num_to_num;
             for (size_t i = 0; i < size; ++i)
-                table[from[i].get<UInt64>()] = (*used_to)[i].get<UInt64>();
+                table[from[i].reinterpret<UInt64>()] = (*used_to)[i].reinterpret<UInt64>();
         }
         else if (from[0].getType() != Field::Types::String && to[0].getType() == Field::Types::String)
         {
@@ -803,7 +803,7 @@ private:
             {
                 const String & str_to = to[i].get<const String &>();
                 StringRef ref{string_pool.insert(str_to.data(), str_to.size() + 1), str_to.size() + 1};
-                table[from[i].get<UInt64>()] = ref;
+                table[from[i].reinterpret<UInt64>()] = ref;
             }
         }
         else if (from[0].getType() == Field::Types::String && to[0].getType() != Field::Types::String)
@@ -814,7 +814,7 @@ private:
             {
                 const String & str_from = from[i].get<const String &>();
                 StringRef ref{string_pool.insert(str_from.data(), str_from.size() + 1), str_from.size() + 1};
-                table[ref] = (*used_to)[i].get<UInt64>();
+                table[ref] = (*used_to)[i].reinterpret<UInt64>();
             }
         }
         else if (from[0].getType() == Field::Types::String && to[0].getType() == Field::Types::String)

@@ -261,7 +261,7 @@ Block StorageLiveView::getHeader() const
         sample_block = InterpreterSelectQuery(inner_query, global_context, storage,
             SelectQueryOptions(QueryProcessingStage::Complete)).getSampleBlock();
         sample_block.insert({DataTypeUInt64().createColumnConst(
-            sample_block.rows(), 0)->convertToFullColumnIfConst(),
+            sample_block.rows(), static_cast<UInt64>(0))->convertToFullColumnIfConst(),
             std::make_shared<DataTypeUInt64>(),
             "_version"});
         /// convert all columns to full columns
